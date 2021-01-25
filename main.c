@@ -4,14 +4,14 @@
 #include <stdbool.h>
 #include <locale.h>
 
-struct map {
-	char* key;
-	int value;
+struct mapa {
+	char* chave;
+	int valor;
 };
 
-struct stack {
-	struct map* map;
-	int len;
+struct pilha {
+	struct mapa* mapa;
+	int capacidade;
 };
 
 struct cabecalho {
@@ -19,56 +19,96 @@ struct cabecalho {
 	int capacidade;
 };
 
-void nextLine(FILE* file) {
+enum OpcoesArgumentos {
+	NOME_ARQUIVO = 1,
+	TITULO_COLUNA = 2
+};
+
+enum {
+	VAZIO = 0
+};
+
+
+char* removerCaracter(char*, char);
+int comparar(const void*, const void*);
+void ordernarMapa(struct mapa*, int);
+void pularLinha(FILE*);
+struct cabecalho  extrairCabecalho(FILE*, char);
+struct pilha extrairColuna(FILE*, int, char);
+void exibirTabela(struct pilha, char*);
+int selecionarColuna(struct cabecalho, char*);
+void destroir( void *, char*);
+
+int main(int argc, char**argv) {
+
+	FILE *arquivo = NULL;
+	const int TOTAL_DE_PARAMETROS = 3;
+	const char delimitador = ';';
+	char* tituloColuna = argv[TITULO_COLUNA];
+	char* nomeArquivo = argv[NOME_ARQUIVO];
+	
+	if(argc < TOTAL_DE_PARAMETROS) {
+		fprintf(stderr, "Passe um arquivo csv e o titulo da posicaoColuna como parametro: OBS: delimitador ponto e virgula(;)");
+		exit(1);
+	}
+
+	arquivo = fopen(nomeArquivo , "r");
+	
+	if(arquivo == NULL) {
+		fprintf(stderr, "Não foi possivel abri o arquivo \"%s\"", nomeArquivo);
+		exit(1);
+	}
+
+	struct cabecalho cabecalho = extrairCabecalho(arquivo, delimitador);
+	struct pilha dadosColuna = 
+		extrairColuna(arquivo, selecionarColuna(cabecalho, tituloColuna), delimitador);
+		
+	fclose(arquivo);
+	ordernarMapa(dadosColuna.mapa, dadosColuna.capacidade);
+	exibirTabela(dadosColuna, tituloColuna);
+	
+	destroir(&dadosColuna, "struct pilha");
+	destroir(&cabecalho, "struct cabecalho");
+
+	return 0;
+}
+
+void pularLinha(FILE* file) {
 	while(fgetc(file) != '\n');
 }
 
-char* trim(char* s){
-	char* n = (char*)malloc(0);
-	size_t l = 0;
-	for(size_t i = 0; i < strlen(s); i++) {
-		if(s[i] != ' ') {
-			l++;
-			n = (char*)realloc(n, sizeof(char) * l);
-			n[l - 1] = s[i];
-		}
-	}
-
-	return n;
-}
-
-char* removeChar(char*s, char c) {
+char* removerCaracter(char*s, char c) {
 	char*n = (char*) malloc(0);
-	int len = 0;
+	int capacidade = 0;
 	for(size_t i = 0; i < strlen(s); i++) {
 		if(s[i] != c) {
-			len++;
-			n = realloc(n, sizeof(char) * len);
-			n[len - 1] = s[i];
+			capacidade++;
+			n = realloc(n, sizeof(char) * capacidade);
+			n[capacidade - 1] = s[i];
 		}
 	}
 
 	return n;
 }
 
-int compare(const void* a, const void* b)  {
-	struct map _a = (*(struct map *) a);
-	struct map _b = (*(struct map *) b);
-	if( _a.value < _b.value) return 1;
-	if( _a.value > _b.value) return -1;
+int comparar(const void* a, const void* b) {
+	;
+	if((*(struct mapa *) a).valor < (*(struct mapa *) b).valor) return  1;
+	if((*(struct mapa *) a).valor > (*(struct mapa *) b).valor) return -1;
 	return 1;
 } 
 
-void sort(struct map *s, int n){  
-  qsort(s, n, sizeof(struct map), compare);
+void ordernarMapa(struct mapa *s, int n) {
+  qsort(s, n, sizeof(struct mapa), comparar);
 }
 
-struct cabecalho  extrairCabecalho(FILE *file){
+struct cabecalho  extrairCabecalho(FILE *file, char delimitador) {
 
 	struct cabecalho cabecalho = {.capacidade=0, .colunas=NULL};
-	char*  text = (char*)malloc(0);
+	char*  tituloColuna = (char*)malloc(0);
 	char letra;
-	int len = 0;
+	const int INICIO_ARQUIVO = 1;
+	int capacidade = 0;
 	int start = 0;
 	fpos_t pos;
 
@@ -80,30 +120,30 @@ struct cabecalho  extrairCabecalho(FILE *file){
 	while(letra != '\n') {
 		
 		letra = fgetc(file);
-		if((letra == ';' && !start) || ftell(file) == 1) {
+		if((letra == delimitador && !start) || ftell(file) == INICIO_ARQUIVO) {
 			start = 1;
-			len = 0;
+			capacidade = 0;
 		}
-		if(letra == ';' && start) {
+		if(letra == delimitador && start) {
 
 			start = 0;
-			len = 0;
+			capacidade = 0;
 
 			cabecalho.capacidade += 1;
 			cabecalho.colunas = (char**) realloc(cabecalho.colunas, sizeof(char**) * cabecalho.capacidade);
-			cabecalho.colunas[cabecalho.capacidade - 1] = (char*)malloc(sizeof(char) * strlen(text));
-			strcpy(cabecalho.colunas[cabecalho.capacidade - 1], text);
+			cabecalho.colunas[cabecalho.capacidade - 1] = (char*)malloc(sizeof(char) * strlen(tituloColuna));
+			strcpy(cabecalho.colunas[cabecalho.capacidade - 1], tituloColuna);
 	        			
-			text = (char*) realloc(text, len);
+			tituloColuna = (char*) realloc(tituloColuna, capacidade);
 			continue;
 		}
 		
 		if(letra == '"') continue;
 				
-		len++;
+		capacidade++;
 				
-		text = (char*) realloc(text, sizeof(char) * len);
-		text[len - 1] = letra;
+		tituloColuna = (char*) realloc(tituloColuna, sizeof(char) * capacidade);
+		tituloColuna[capacidade - 1] = letra;
 	}
 
 	fsetpos(file, &pos);
@@ -112,110 +152,118 @@ struct cabecalho  extrairCabecalho(FILE *file){
 	return cabecalho;
 }
 
-
-int main(int argc, char**argv){
+struct pilha extrairColuna(FILE *file, int posicaoColuna, char delimitador) {
 	
-	FILE *file = NULL;
-	if(argc > 1)
-		file = fopen(argv[1], "r");
-	else {
-		fprintf(stderr, "Passe um arquivo csv como parametro: OBS: delimitador ponto e virgula(;)");
-		exit(1);
-	}
-
+	struct pilha dadosColuna = {.capacidade = VAZIO};
+	char* valorColuna = (char*)malloc(0);
+	int tamanhoDaString = VAZIO;
+	int qtdDelimitador = VAZIO;
 	
-	int dot = 0;
-	int COLUNA = 28;
-
-	char* text = (char*)malloc(0);
-	int len = 0;
-
-	struct stack candidadosPorPartido = {.len = 0};
-	struct cabecalho cabecalho = extrairCabecalho(file);
-
-	if(argc == 3) {
-		for(int i = 0; i < cabecalho.capacidade; i++) {
-			if(!strcmp(cabecalho.colunas[i], argv[2])) {
-				COLUNA = i;
-				break;			
-			}
-		}
-	}
-
+	// PULUAR CABECAÇHO
+	pularLinha(file);
+	
 	do {
-		char letra = fgetc(file);
-		if(letra == ';') dot++;
 		
+		char letra = fgetc(file);
+		if(letra == delimitador) qtdDelimitador++;
 	
-		if(dot >= COLUNA && letra != ';') {
-			len++;
-			text = (char*) realloc(text, sizeof(char) * len);
-			text[len - 1] = letra;
+		if(qtdDelimitador >= posicaoColuna && letra != delimitador) {
+			tamanhoDaString++;
+			valorColuna = (char*) realloc(valorColuna, sizeof(char) * tamanhoDaString);
+			valorColuna[tamanhoDaString - 1] = letra;
 		}
-		if(dot > COLUNA && letra == ';') {
+		if(qtdDelimitador > posicaoColuna && letra == delimitador) {
 	
-			text = removeChar(text, '"');
+			valorColuna = removerCaracter(valorColuna, '"');
 
-			if(candidadosPorPartido.len == 0) {
-				candidadosPorPartido.len = 1;
-				candidadosPorPartido.map = (struct map*)realloc(candidadosPorPartido.map, sizeof(struct map) * candidadosPorPartido.len);
-				struct map partido = {.value=1};
-				partido.key = (char*)calloc(strlen(text), sizeof(char));
-				strcpy(partido.key, text);
-				candidadosPorPartido.map[candidadosPorPartido.len - 1] = partido;
+			if(dadosColuna.capacidade == VAZIO) {
+				dadosColuna.capacidade = 1;
+				dadosColuna.mapa = (struct mapa*)realloc(dadosColuna.mapa, sizeof(struct mapa) * dadosColuna.capacidade);
+				dadosColuna.mapa[dadosColuna.capacidade - 1].chave = (char*)calloc(strlen(valorColuna), sizeof(char));
+				strcpy(dadosColuna.mapa[dadosColuna.capacidade - 1].chave, valorColuna);
+				dadosColuna.mapa[dadosColuna.capacidade - 1].valor = 1;
 
 			} else {
 			
-				bool existePartido = false;
+				bool existeChave = false;
 				
-				for(int i = 0; i < candidadosPorPartido.len; i++) {
-					if(!strcmp(candidadosPorPartido.map[i].key, text)) {
-						candidadosPorPartido.map[i].value += 1;
-						existePartido = true;
+				for(int i = 0; i < dadosColuna.capacidade; i++) {
+
+					if(!strcmp(dadosColuna.mapa[i].chave, valorColuna)) {
+						
+						dadosColuna.mapa[i].valor += 1;
+						existeChave = true;
 						break;
 					}
 				}
 
-				if(!existePartido) {
-				
-					candidadosPorPartido.len += 1;
-					candidadosPorPartido.map = (struct map*)realloc(candidadosPorPartido.map, sizeof(struct map) * candidadosPorPartido.len);
-		
-					candidadosPorPartido.map[candidadosPorPartido.len - 1].key = (char*)calloc(strlen(text), sizeof(char));
-					candidadosPorPartido.map[candidadosPorPartido.len - 1].value = 1;
-					strcpy(candidadosPorPartido.map[candidadosPorPartido.len - 1].key, text);	
-
+				if(!existeChave) {
+					dadosColuna.capacidade += 1;
+					dadosColuna.mapa = (struct mapa*)realloc(dadosColuna.mapa, sizeof(struct mapa) * dadosColuna.capacidade);
+					dadosColuna.mapa[dadosColuna.capacidade - 1].chave = (char*)calloc(strlen(valorColuna), sizeof(char));
+					dadosColuna.mapa[dadosColuna.capacidade - 1].valor = 1;
+					strcpy(dadosColuna.mapa[dadosColuna.capacidade - 1].chave, valorColuna);
 				}
 
 			}
 
-
-			len = 0;
-			dot = 0;
-			text = (char*) realloc(text, 0);
+			tamanhoDaString = VAZIO;
+			qtdDelimitador = VAZIO;
+			valorColuna = (char*) realloc(valorColuna, VAZIO);
 				
-			nextLine(file);
+			pularLinha(file);
 		}
+
 	}
 	while(!feof(file));
-		
-	fclose(file);
 
 
-	sort(candidadosPorPartido.map, candidadosPorPartido.len);
+	return dadosColuna;
+}
+
+int selecionarColuna(struct cabecalho cabecalho, char* tituloColuna) {
 	
-	printf("|     INDEX \t | Nº CANDIDATOS |    %s \n", argv[2]);
-	for(int i = 0; i < candidadosPorPartido.len; i++) {
-		printf("|\t%d \t | \t %d \t | \t%s\n", i + 1, candidadosPorPartido.map[i].value, candidadosPorPartido.map[i].key);
+	int posicaoColuna = 28;
+	for(int i = 0; i < cabecalho.capacidade; i++) {
+		if(!strcmp(cabecalho.colunas[i], tituloColuna))
+				return i;
+		}
+
+	return posicaoColuna;
+}
+
+void exibirTabela(struct pilha dadosColuna, char* posicaoColuna ) {
+
+	printf("|     INDEX \t | Nº CANDIDATOS |    %s \n", posicaoColuna);
+	for(int i = 0; i < dadosColuna.capacidade; i++) {
+		printf("|\t%d \t | \t %d \t | \t%s\n", i + 1, dadosColuna.mapa[i].valor, dadosColuna.mapa[i].chave);
 	}
 	printf("---------------------------------------------------------\n");
 	printf("| \t-\t |\tTOTAL\t | \t -\n");
 
 	int totalCandidatos = 0;
 
-	for(int i = 0; i < candidadosPorPartido.len; i++)
-		totalCandidatos += candidadosPorPartido.map[i].value;
+	for(int i = 0; i < dadosColuna.capacidade; i++)
+		totalCandidatos += dadosColuna.mapa[i].valor;
 	printf("|\t   \t |\t%d\t |\n",totalCandidatos);
 
-	return 0;
+}
+
+void destroir( void *memoria, char* tipo ) {
+	if(!strcmp(tipo, "struct pilha")) {
+		struct pilha* pilha = (struct pilha*) memoria;
+		for(int i = 0; i < pilha->capacidade; i++)
+			free(pilha->mapa[i].chave);
+
+		free(pilha->mapa);
+
+	}
+
+	if(!strcmp(tipo, "struct cabecalho")) {
+		struct cabecalho* cabecalho = (struct cabecalho*) memoria;
+		for(int i = 0; i < cabecalho->capacidade; i++)
+			free(cabecalho->colunas[i]);
+		
+		free(cabecalho->colunas);
+	}
 }
