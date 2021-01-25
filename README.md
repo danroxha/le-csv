@@ -11,7 +11,7 @@ gcc main.c -o main && ./main dados_eleicao_2020.csv SG_PARTIDO
 ```
 * Saída
 ```
-| INDEX  | Nº CANDIDATOS |    SG_PARTIDO 
+|      INDEX     | Nº CANDIDATOS |    SG_PARTIDO 
 |	1 	 |  	 1839 	 | 	PDT
 |	2 	 |  	 1831 	 | 	PL
 |	3 	 |  	 1620 	 | 	PC do B
@@ -41,10 +41,10 @@ gcc main.c -o main && ./main dados_eleicao_2020.csv SG_PARTIDO
 |	27 	 |  	 140 	 | 	REDE
 |	28 	 |  	 125 	 | 	PMB
 |	29 	 |  	 11 	 | 	PSTU
-|	30 	 |  	 9 	     | 	NOVO
-|	31 	 |  	 5 	     | 	PCB
+|	30 	 |  	 9 	 | 	NOVO
+|	31 	 |  	 5 	 | 	PCB
 ------------------------------------------
-| 	-	 |    TOTAL   	 | 	 -
-|	   	 |    20794	     |
+| 	-	 |    TOTAL      | 	 -
+|	   	 |    20794	 |
 
 ```
