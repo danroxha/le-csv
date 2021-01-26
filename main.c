@@ -84,7 +84,7 @@ char* removerCaracter(char*s, char c) {
 	for(size_t i = 0; i < strlen(s); i++) {
 		if(s[i] != c) {
 			capacidade++;
-			n = realloc(n, sizeof(char) * capacidade);
+			n = (char*)realloc(n, sizeof(char) * capacidade);
 			n[capacidade - 1] = s[i];
 		}
 	}
