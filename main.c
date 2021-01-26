@@ -93,7 +93,6 @@ char* removerCaracter(char*s, char c) {
 }
 
 int comparar(const void* a, const void* b) {
-	;
 	if((*(struct mapa *) a).valor < (*(struct mapa *) b).valor) return  1;
 	if((*(struct mapa *) a).valor > (*(struct mapa *) b).valor) return -1;
 	return 1;
