@@ -44,13 +44,14 @@ int main(int argc, char**argv) {
 	FILE *arquivo = NULL;
 	const int TOTAL_DE_PARAMETROS = 3;
 	const char delimitador = ';';
-	char* tituloColuna = argv[TITULO_COLUNA];
-	char* nomeArquivo = argv[NOME_ARQUIVO];
 	
 	if(argc < TOTAL_DE_PARAMETROS) {
 		fprintf(stderr, "Passe um arquivo csv e o titulo da posicaoColuna como parametro: OBS: delimitador ponto e virgula(;)");
 		exit(1);
 	}
+
+	char* tituloColuna = argv[TITULO_COLUNA];
+	char* nomeArquivo = argv[NOME_ARQUIVO];
 
 	arquivo = fopen(nomeArquivo , "r");
 	
