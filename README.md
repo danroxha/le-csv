@@ -1,3 +1,9 @@
+![License](https://img.shields.io/github/license/dannrocha/le-csv)
+![Repo size](https://img.shields.io/github/repo-size/dannrocha/le-csv)
+![Last commit](https://img.shields.io/github/last-commit/dannRocha/le-csv)
+![Dev](https://img.shields.io/badge/daniel%20rocha-dev-green)
+
+
 ## Atividade de AED
 
 ### compilação
