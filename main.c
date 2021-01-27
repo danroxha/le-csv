@@ -79,14 +79,17 @@ void pularLinha(FILE* file) {
 }
 
 char* removerCaracter(char*s, char c) {
-	char*n = (char*) malloc(0);
+	
+	char*n = (char*) malloc(strlen(s) * sizeof(char));
 	int capacidade = 0;
+	
+	for(size_t i = 0; i < strlen(s); i++)
+		n[i] = '\0';
+
 	for(size_t i = 0; i < strlen(s); i++) {
-		if(s[i] != c) {
-			capacidade++;
-			n = (char*)realloc(n, sizeof(char) * capacidade);
-			n[capacidade - 1] = s[i];
-		}
+		if(s[i] == c) continue;
+		capacidade++;
+		n[capacidade - 1] = s[i];
 	}
 
 	return n;
@@ -105,7 +108,7 @@ void ordernarMapa(struct mapa *s, int n) {
 struct cabecalho  extrairCabecalho(FILE *file, char delimitador) {
 
 	struct cabecalho cabecalho = {.capacidade=0, .colunas=NULL};
-	char*  tituloColuna = (char*)malloc(0);
+	char*  tituloColuna = NULL;
 	char letra;
 	const int INICIO_ARQUIVO = 1;
 	int capacidade = 0;
@@ -115,8 +118,6 @@ struct cabecalho  extrairCabecalho(FILE *file, char delimitador) {
 	fgetpos(file, &pos);
 	fseek(file, 0, SEEK_SET);
 
-	
-	
 	while(letra != '\n') {
 		
 		letra = fgetc(file);
@@ -125,21 +126,23 @@ struct cabecalho  extrairCabecalho(FILE *file, char delimitador) {
 			capacidade = 0;
 		}
 		if(letra == delimitador && start) {
-
+			char* tituloTratado = removerCaracter(tituloColuna, '"');
+			
 			start = 0;
 			capacidade = 0;
-
+			
 			cabecalho.capacidade += 1;
 			cabecalho.colunas = (char**) realloc(cabecalho.colunas, sizeof(char**) * cabecalho.capacidade);
-			cabecalho.colunas[cabecalho.capacidade - 1] = (char*)malloc(sizeof(char) * strlen(tituloColuna));
-			strcpy(cabecalho.colunas[cabecalho.capacidade - 1], tituloColuna);
-	        			
+			cabecalho.colunas[cabecalho.capacidade - 1] = (char*)malloc(sizeof(char) * strlen(tituloTratado) + 1);
+			
+			strcpy(cabecalho.colunas[cabecalho.capacidade - 1], tituloTratado);
+	    
 			tituloColuna = (char*)malloc(0);
+			free(tituloTratado);
 			
 			continue;
 		}
 		
-		if(letra == '"') continue;
 				
 		capacidade++;
 				
@@ -168,20 +171,19 @@ struct pilha extrairColuna(FILE *file, int posicaoColuna, char delimitador) {
 		char letra = fgetc(file);
 		if(letra == delimitador) qtdDelimitador++;
 	
-		if(qtdDelimitador >= posicaoColuna && letra != delimitador) {
+		if(qtdDelimitador == posicaoColuna && letra != delimitador) {
 			tamanhoDaString++;
 			valorColuna = (char*) realloc(valorColuna, sizeof(char) * tamanhoDaString);
 			valorColuna[tamanhoDaString - 1] = letra;
 		}
 		if(qtdDelimitador > posicaoColuna && letra == delimitador) {
-	
-			valorColuna = removerCaracter(valorColuna, '"');
+			char* valorTratado = removerCaracter(valorColuna, '"');
 
 			if(dadosColuna.capacidade == VAZIO) {
 				dadosColuna.capacidade = 1;
 				dadosColuna.mapa = (struct mapa*)realloc(dadosColuna.mapa, sizeof(struct mapa) * dadosColuna.capacidade);
-				dadosColuna.mapa[dadosColuna.capacidade - 1].chave = (char*)calloc(strlen(valorColuna), sizeof(char));
-				strcpy(dadosColuna.mapa[dadosColuna.capacidade - 1].chave, valorColuna);
+				dadosColuna.mapa[dadosColuna.capacidade - 1].chave = (char*)calloc(strlen(valorTratado), sizeof(char));
+				strcpy(dadosColuna.mapa[dadosColuna.capacidade - 1].chave, valorTratado);
 				dadosColuna.mapa[dadosColuna.capacidade - 1].valor = 1;
 
 			} else {
@@ -190,7 +192,7 @@ struct pilha extrairColuna(FILE *file, int posicaoColuna, char delimitador) {
 				
 				for(int i = 0; i < dadosColuna.capacidade; i++) {
 
-					if(!strcmp(dadosColuna.mapa[i].chave, valorColuna)) {
+					if(!strcmp(dadosColuna.mapa[i].chave, valorTratado)) {
 						
 						dadosColuna.mapa[i].valor += 1;
 						existeChave = true;
@@ -201,16 +203,17 @@ struct pilha extrairColuna(FILE *file, int posicaoColuna, char delimitador) {
 				if(!existeChave) {
 					dadosColuna.capacidade += 1;
 					dadosColuna.mapa = (struct mapa*)realloc(dadosColuna.mapa, sizeof(struct mapa) * dadosColuna.capacidade);
-					dadosColuna.mapa[dadosColuna.capacidade - 1].chave = (char*)calloc(strlen(valorColuna), sizeof(char));
+					dadosColuna.mapa[dadosColuna.capacidade - 1].chave = (char*)calloc(strlen(valorTratado), sizeof(char));
 					dadosColuna.mapa[dadosColuna.capacidade - 1].valor = 1;
-					strcpy(dadosColuna.mapa[dadosColuna.capacidade - 1].chave, valorColuna);
+					strcpy(dadosColuna.mapa[dadosColuna.capacidade - 1].chave, valorTratado);
 				}
 
 			}
 
 			tamanhoDaString = VAZIO;
 			qtdDelimitador = VAZIO;
-			valorColuna = (char*) realloc(valorColuna, VAZIO);
+			valorColuna = (char*) malloc(0);
+			free(valorTratado);
 				
 			pularLinha(file);
 		}
