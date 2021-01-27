@@ -134,7 +134,8 @@ struct cabecalho  extrairCabecalho(FILE *file, char delimitador) {
 			cabecalho.colunas[cabecalho.capacidade - 1] = (char*)malloc(sizeof(char) * strlen(tituloColuna));
 			strcpy(cabecalho.colunas[cabecalho.capacidade - 1], tituloColuna);
 	        			
-			tituloColuna = (char*) realloc(tituloColuna, capacidade);
+			tituloColuna = (char*)malloc(0);
+			
 			continue;
 		}
 		
