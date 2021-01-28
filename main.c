@@ -37,7 +37,7 @@ struct cabecalho  extrairCabecalho(FILE*, char);
 struct pilha extrairColuna(FILE*, int, char);
 void exibirTabela(struct pilha, char*);
 int selecionarColuna(struct cabecalho, char*);
-void destroir( void *, char*);
+void destruir( void *, char*);
 
 int main(int argc, char**argv) {
 
@@ -66,7 +66,7 @@ int main(int argc, char**argv) {
 
 	if(coluna < 0){
 		fprintf(stderr, "Coluna \033[31;1m %s \033[0m não existe", tituloColuna);
-		destroir(&cabecalho, "struct cabecalho");
+		destruir(&cabecalho, "struct cabecalho");
 		fclose(arquivo);
 		exit(1);
 	}
@@ -77,8 +77,8 @@ int main(int argc, char**argv) {
 	ordernarMapa(dadosColuna.mapa, dadosColuna.capacidade);
 	exibirTabela(dadosColuna, tituloColuna);
 	
-	destroir(&dadosColuna, "struct pilha");
-	destroir(&cabecalho, "struct cabecalho");
+	destruir(&dadosColuna, "struct pilha");
+	destruir(&cabecalho, "struct cabecalho");
 
 	return 0;
 }
@@ -262,7 +262,7 @@ void exibirTabela(struct pilha dadosColuna, char* posicaoColuna ) {
 
 }
 
-void destroir( void *memoria, char* tipo ) {
+void destruir( void *memoria, char* tipo ) {
 	if(!strcmp(tipo, "struct pilha")) {
 		struct pilha* pilha = (struct pilha*) memoria;
 		for(int i = 0; i < pilha->capacidade; i++)
